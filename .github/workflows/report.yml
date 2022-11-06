@@ -1,0 +1,37 @@
+name: Test Suite Report
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    # Daily at 2:15
+    - cron: "15 2 * * *"
+
+permissions:
+  contents: read
+  packages: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        id: list-packages
+        with:
+          retries: 3
+          script: |
+            return github.rest.packages.listPackagesForOrganization({
+              org: context.repo.owner,
+              package_type: 'container',
+              visibility: 'public',
+            })
+      - name: Get result
+        run: echo "${{steps.list-packages.outputs.result}}"
